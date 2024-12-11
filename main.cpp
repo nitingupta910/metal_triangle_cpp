@@ -3,10 +3,10 @@
 #define MTL_PRIVATE_IMPLEMENTATION
 #define NS_FOUNDATION_IMPLEMENTATION
 
-#include <SDL2/SDL.h>
 #include <Metal/Metal.hpp>
 #include <QuartzCore/CAMetalLayer.h>
 #include <QuartzCore/QuartzCore.hpp>
+#include <SDL2/SDL.h>
 #include <iostream>
 #include <vector>
 
@@ -18,11 +18,9 @@ int main(int argc, char *argv[]) {
     }
 
     // Create an SDL window
-    SDL_Window *window = SDL_CreateWindow("Metal + SDL2 Triangle",
-                                          SDL_WINDOWPOS_CENTERED,
-                                          SDL_WINDOWPOS_CENTERED,
-                                          800, 600,
-                                          SDL_WINDOW_SHOWN | SDL_WINDOW_ALLOW_HIGHDPI);
+    SDL_Window *window =
+        SDL_CreateWindow("Metal + SDL2 Triangle", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+                         800, 600, SDL_WINDOW_SHOWN | SDL_WINDOW_ALLOW_HIGHDPI);
     if (!window) {
         std::cerr << "Failed to create SDL window: " << SDL_GetError() << std::endl;
         SDL_Quit();
@@ -43,25 +41,32 @@ int main(int argc, char *argv[]) {
     MTL::CommandQueue *commandQueue = device->newCommandQueue();
     // Load the compiled metallib file
     NS::Error *error = nullptr;
-    MTL::Library *library = device->newLibrary(NS::String::string("shaders.metallib", NS::ASCIIStringEncoding), &error);
+    MTL::Library *library =
+        device->newLibrary(NS::String::string("shaders.metallib", NS::ASCIIStringEncoding), &error);
     if (!library) {
-        std::cerr << "Failed to load Metal library: " << error->localizedDescription()->utf8String() << std::endl;
+        std::cerr << "Failed to load Metal library: " << error->localizedDescription()->utf8String()
+                  << std::endl;
         return -1;
     }
 
-    MTL::Function *vertexFunction = library->newFunction(NS::String::string("vertex_main", NS::ASCIIStringEncoding));
-    MTL::Function *fragmentFunction = library->
-            newFunction(NS::String::string("fragment_main", NS::ASCIIStringEncoding));
+    MTL::Function *vertexFunction =
+        library->newFunction(NS::String::string("vertex_main", NS::ASCIIStringEncoding));
+    MTL::Function *fragmentFunction =
+        library->newFunction(NS::String::string("fragment_main", NS::ASCIIStringEncoding));
 
-    MTL::RenderPipelineDescriptor *pipelineDescriptor = MTL::RenderPipelineDescriptor::alloc()->init();
+    MTL::RenderPipelineDescriptor *pipelineDescriptor =
+        MTL::RenderPipelineDescriptor::alloc()->init();
     pipelineDescriptor->setVertexFunction(vertexFunction);
     pipelineDescriptor->setFragmentFunction(fragmentFunction);
-    pipelineDescriptor->colorAttachments()->object(0)->setPixelFormat(MTL::PixelFormat::PixelFormatBGRA8Unorm);
+    pipelineDescriptor->colorAttachments()->object(0)->setPixelFormat(
+        MTL::PixelFormat::PixelFormatBGRA8Unorm);
 
-    NS::Error* error2 = nullptr;
-    MTL::RenderPipelineState *pipelineState = device->newRenderPipelineState(pipelineDescriptor, &error2);
+    NS::Error *error2 = nullptr;
+    MTL::RenderPipelineState *pipelineState =
+        device->newRenderPipelineState(pipelineDescriptor, &error2);
     if (!pipelineState) {
-        std::cerr << "Failed to create pipeline state: " << error2->localizedDescription()->utf8String() << std::endl;
+        std::cerr << "Failed to create pipeline state: "
+                  << error2->localizedDescription()->utf8String() << std::endl;
         return -1;
     }
 
@@ -70,7 +75,7 @@ int main(int argc, char *argv[]) {
     pipelineDescriptor->release();
     library->release();
 
-    CA::MetalLayer *metalLayer = (CA::MetalLayer *) SDL_Metal_GetLayer(metalView);
+    CA::MetalLayer *metalLayer = (CA::MetalLayer *)SDL_Metal_GetLayer(metalView);
     metalLayer->setDevice(device);
     metalLayer->setPixelFormat(MTL::PixelFormat::PixelFormatBGRA8Unorm);
     metalLayer->setFramebufferOnly(true);
@@ -86,21 +91,26 @@ int main(int argc, char *argv[]) {
         }
 
         MTL::Drawable *mtlDrawable = metalLayer->nextDrawable();
-        if (!mtlDrawable) continue;
+        if (!mtlDrawable)
+            continue;
 
         const auto *drawable = (CA::MetalDrawable *)(mtlDrawable);
-        MTL::RenderPassDescriptor *passDescriptor = MTL::RenderPassDescriptor::renderPassDescriptor();
-        passDescriptor->colorAttachments()->object(0)->setTexture(((MTL::Texture *)drawable->texture()));
-        passDescriptor->colorAttachments()->object(0)->setLoadAction(MTL::LoadAction::LoadActionClear);
-        passDescriptor->colorAttachments()->object(0)->setClearColor(MTL::ClearColor(0.0, 0.0, 0.0, 1.0));
-        passDescriptor->colorAttachments()->object(0)->setStoreAction(MTL::StoreAction::StoreActionStore);
+        MTL::RenderPassDescriptor *passDescriptor =
+            MTL::RenderPassDescriptor::renderPassDescriptor();
+        passDescriptor->colorAttachments()->object(0)->setTexture(
+            ((MTL::Texture *)drawable->texture()));
+        passDescriptor->colorAttachments()->object(0)->setLoadAction(
+            MTL::LoadAction::LoadActionClear);
+        passDescriptor->colorAttachments()->object(0)->setClearColor(
+            MTL::ClearColor(0.0, 0.0, 0.0, 1.0));
+        passDescriptor->colorAttachments()->object(0)->setStoreAction(
+            MTL::StoreAction::StoreActionStore);
 
         MTL::CommandBuffer *commandBuffer = commandQueue->commandBuffer();
         MTL::RenderCommandEncoder *encoder = commandBuffer->renderCommandEncoder(passDescriptor);
         encoder->setRenderPipelineState(pipelineState);
-        encoder->drawPrimitives(MTL::PrimitiveType::PrimitiveTypeTriangle, 
-                              NS::UInteger(0), 
-                              NS::UInteger(3));
+        encoder->drawPrimitives(MTL::PrimitiveType::PrimitiveTypeTriangle, NS::UInteger(0),
+                                NS::UInteger(3));
         encoder->endEncoding();
 
         commandBuffer->presentDrawable(drawable);
