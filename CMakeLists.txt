@@ -7,7 +7,7 @@ set(CMAKE_CXX_STANDARD 20)
 find_package(SDL2 REQUIRED)
 
 # Include SDL2 and metal-cpp in the project
-include_directories(${SDL2_INCLUDE_DIRS} ${CMAKE_SOURCE_DIR}/metal-cpp)
+include_directories(${SDL2_INCLUDE_DIRS} ${CMAKE_SOURCE_DIR}/deps/metal-cpp)
 
 # Find Metal framework (macOS)
 find_library(METAL_FRAMEWORK Metal REQUIRED)
