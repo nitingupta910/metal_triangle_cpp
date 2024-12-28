@@ -8,7 +8,6 @@
 #include <QuartzCore/QuartzCore.hpp>
 #include <SDL2/SDL.h>
 #include <iostream>
-#include <vector>
 
 int main(int argc, char *argv[]) {
     // SDL initialization
@@ -75,7 +74,7 @@ int main(int argc, char *argv[]) {
     pipelineDescriptor->release();
     library->release();
 
-    CA::MetalLayer *metalLayer = (CA::MetalLayer *)SDL_Metal_GetLayer(metalView);
+    auto *metalLayer = static_cast<CA::MetalLayer *>(SDL_Metal_GetLayer(metalView));
     metalLayer->setDevice(device);
     metalLayer->setPixelFormat(MTL::PixelFormat::PixelFormatBGRA8Unorm);
     metalLayer->setFramebufferOnly(true);
@@ -94,7 +93,7 @@ int main(int argc, char *argv[]) {
         if (!mtlDrawable)
             continue;
 
-        const auto *drawable = (CA::MetalDrawable *)(mtlDrawable);
+        const auto *drawable = reinterpret_cast<CA::MetalDrawable *>(mtlDrawable);
         MTL::RenderPassDescriptor *passDescriptor =
             MTL::RenderPassDescriptor::renderPassDescriptor();
         passDescriptor->colorAttachments()->object(0)->setTexture(
@@ -109,8 +108,8 @@ int main(int argc, char *argv[]) {
         MTL::CommandBuffer *commandBuffer = commandQueue->commandBuffer();
         MTL::RenderCommandEncoder *encoder = commandBuffer->renderCommandEncoder(passDescriptor);
         encoder->setRenderPipelineState(pipelineState);
-        encoder->drawPrimitives(MTL::PrimitiveType::PrimitiveTypeTriangle, NS::UInteger(0),
-                                NS::UInteger(3));
+        encoder->drawPrimitives(MTL::PrimitiveType::PrimitiveTypeTriangle, static_cast<NS::UInteger>(0),
+                                static_cast<NS::UInteger>(3));
         encoder->endEncoding();
 
         commandBuffer->presentDrawable(drawable);
